@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Link } from "expo-router";
 import { Text, Image, TouchableOpacity, View } from "react-native";
 
 import { icons } from "@/constants/icons";
+import { toggleBookmark } from "@/services/appwrite";
+import { type BookmarkMovie } from "@/services/appwrite";
 
 const MovieCard = ({
   id,
@@ -9,10 +12,38 @@ const MovieCard = ({
   title,
   vote_average,
   release_date,
-}: Movie) => {
+  isBookmarked = false,
+}: BookmarkMovie & { isBookmarked?: boolean }) => {
+  const [isMarked, setIsMarked] = useState(isBookmarked);
+
+  const handleBookmark = async (e: any) => {
+    e.preventDefault();
+    try {
+      const userId = "current-user-id"; // Replace with actual user ID from your auth system
+      const isNowBookmarked = await toggleBookmark(
+        { id, poster_path, title, vote_average, release_date },
+        userId
+      );
+      setIsMarked(isNowBookmarked);
+    } catch (error) {
+      console.error("Error bookmarking:", error);
+    }
+  };
+
   return (
     <Link href={{ pathname: "/movie/[id]", params: { id } }} asChild>
-      <TouchableOpacity className="w-[30%]">
+      <TouchableOpacity className="w-[30%] relative">
+        <TouchableOpacity
+          className="absolute top-2 right-2 z-10 bg-black/50 rounded-full p-2"
+          onPress={handleBookmark}
+        >
+          <Image
+            source={icons.save}
+            className="size-4"
+            tintColor={isMarked ? "#FFD700" : "#fff"}
+          />
+        </TouchableOpacity>
+
         <Image
           source={{
             uri: poster_path
